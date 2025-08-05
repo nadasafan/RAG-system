@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QA App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="max-w-2xl mx-auto py-10 px-4">
+    <h1 class="text-3xl font-bold text-center mb-6">📚 QA Assistant</h1>
+
+    <!-- Login Section -->
+    <div class="bg-white p-6 rounded-xl shadow mb-6">
+      <h2 class="text-xl font-semibold mb-4">🔐 Login</h2>
+      <input type="text" id="email" placeholder="Email" class="w-full p-2 border mb-2 rounded" />
+      <input type="password" id="password" placeholder="Password" class="w-full p-2 border mb-2 rounded" />
+    </div>
+
+    <!-- Upload Section -->
+    <div class="bg-white p-6 rounded-xl shadow mb-6">
+      <h2 class="text-xl font-semibold mb-4">📤 Upload File (PDF / TXT)</h2>
+      <input type="file" id="file" class="w-full mb-2" />
+      <button onclick="uploadFile()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Upload</button>
+    </div>
+
+    <!-- Ask Section -->
+    <div class="bg-white p-6 rounded-xl shadow mb-6">
+      <h2 class="text-xl font-semibold mb-4">🤖 Ask a Question</h2>
+      <input type="text" id="question" placeholder="Ask your question" class="w-full p-2 border mb-2 rounded" />
+      <button onclick="askQuestion()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Ask</button>
+    </div>
+
+    <!-- Result -->
+    <div class="bg-white p-6 rounded-xl shadow">
+      <h2 class="text-xl font-semibold mb-4">📋 Result</h2>
+      <pre id="result" class="bg-gray-100 p-4 rounded overflow-auto text-sm"></pre>
+    </div>
+  </div>
+
+  <script>
+    const getAuthHeader = () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      return "Basic " + btoa(email + ":" + password);
+    };
+
+    async function uploadFile() {
+      const file = document.getElementById("file").files[0];
+      if (!file) {
+        alert("❗ Please choose a file.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("/upload/", {
+          method: "POST",
+          headers: { Authorization: getAuthHeader() },
+          body: formData
+        });
+
+        const data = await res.json();
+        document.getElementById("result").innerText = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById("result").innerText = "❌ Error uploading file.";
+      }
+    }
+
+    async function askQuestion() {
+      const question = document.getElementById("question").value;
+      if (!question) {
+        alert("❗ Please enter a question.");
+        return;
+      }
+
+      try {
+        const res = await fetch("/ask/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: getAuthHeader()
+          },
+          body: JSON.stringify({ question })
+        });
+
+        const data = await res.json();
+        document.getElementById("result").innerText = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById("result").innerText = "❌ Error asking question.";
+      }
+    }
+  </script>
+</body>
+</html>
