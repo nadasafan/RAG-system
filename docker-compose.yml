@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - OPENAI_API_KEY=${####}##api-keys
+      - DB_PATH=${DB_PATH:-logs.db}
+    depends_on:
+      - elastic
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - elasticnet
+
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: es
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - elasticnet
+
+volumes:
+  esdata:
+
+networks:
+  elasticnet:
